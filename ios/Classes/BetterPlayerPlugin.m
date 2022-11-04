@@ -71,6 +71,8 @@ bool _remoteCommandsInitialized = false;
     texturesCount += 1;
     return texturesCount;
 }
+
+FlutterMethodChannel* batteryChannel;
 - (void)onPlayerSetup:(BetterPlayer*)player
                result:(FlutterResult)result {
     int64_t textureId = [self newTextureId];
@@ -78,6 +80,12 @@ bool _remoteCommandsInitialized = false;
                                          eventChannelWithName:[NSString stringWithFormat:@"better_player_channel/videoEvents%lld",
                                                                textureId]
                                          binaryMessenger:_messenger];
+
+   batteryChannel = [FlutterMethodChannel
+                                          methodChannelWithName:@"samples.flutter.dev/battery"
+                                          binaryMessenger:_messenger];
+
+
     [player setMixWithOthers:false];
     [eventChannel setStreamHandler:player];
     player.eventChannel = eventChannel;
@@ -128,8 +136,8 @@ bool _remoteCommandsInitialized = false;
     [commandCenter.togglePlayPauseCommand setEnabled:YES];
     [commandCenter.playCommand setEnabled:YES];
     [commandCenter.pauseCommand setEnabled:YES];
-    [commandCenter.nextTrackCommand setEnabled:NO];
-    [commandCenter.previousTrackCommand setEnabled:NO];
+    [commandCenter.nextTrackCommand setEnabled:YES];
+    [commandCenter.previousTrackCommand setEnabled:YES];
     if (@available(iOS 9.1, *)) {
         [commandCenter.changePlaybackPositionCommand setEnabled:YES];
     }
@@ -142,6 +150,53 @@ bool _remoteCommandsInitialized = false;
                 _notificationPlayer.eventSink(@{@"event" : @"pause"});
             }
         }
+        return MPRemoteCommandHandlerStatusSuccess;
+    }];
+
+
+    [commandCenter.nextTrackCommand addTargetWithHandler: ^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+ NSLog(@"THE VALUE IS next");
+__weak typeof(self) weakSelf = self;
+ [batteryChannel setMethodCallHandler:^(FlutterMethodCall* call, FlutterResult result) {
+   // This method is invoked on the UI thread.
+   if ([@"getBatteryLevel" isEqualToString:call.method]) {
+     int batteryLevel = [weakSelf getBatteryLevel];
+
+     if (batteryLevel == -1) {
+       result([FlutterError errorWithCode:@"UNAVAILABLE"
+                                  message:@"Battery level not available."
+                                  details:nil]);
+     } else {
+       result(@(batteryLevel));
+     }
+   } else {
+     result(FlutterMethodNotImplemented);
+   }
+ }];
+
+        return MPRemoteCommandHandlerStatusSuccess;
+    }];
+       [commandCenter.previousTrackCommand addTargetWithHandler: ^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+ NSLog(@"THE VALUE IS previousTrackCommand");
+__weak typeof(self) weakSelf = self;
+ [batteryChannel setMethodCallHandler:^(FlutterMethodCall* call, FlutterResult result) {
+   // This method is invoked on the UI thread.
+   if ([@"getBatteryLevel" isEqualToString:call.method]) {
+     int batteryLevel = [weakSelf getBatteryLevel];
+
+     if (batteryLevel == -1) {
+       result([FlutterError errorWithCode:@"UNAVAILABLE"
+                                  message:@"Battery level not available."
+                                  details:nil]);
+     } else {
+       result(@(batteryLevel));
+     }
+   } else {
+     result(FlutterMethodNotImplemented);
+   }
+ }];
+
+
         return MPRemoteCommandHandlerStatusSuccess;
     }];
 
@@ -174,6 +229,16 @@ bool _remoteCommandsInitialized = false;
         }];
     }
     _remoteCommandsInitialized = true;
+}
+
+- (int)getBatteryLevel {
+  UIDevice* device = UIDevice.currentDevice;
+  device.batteryMonitoringEnabled = YES;
+  if (device.batteryState == UIDeviceBatteryStateUnknown) {
+    return -1;
+  } else {
+    return (int)(device.batteryLevel * 100);
+  }
 }
 
 - (void) setupRemoteCommandNotification:(BetterPlayer*)player, NSString* title, NSString* author , NSString* imageUrl{
