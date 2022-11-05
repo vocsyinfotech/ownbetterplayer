@@ -155,7 +155,7 @@ FlutterMethodChannel* batteryChannel;
 
 
     [commandCenter.nextTrackCommand addTargetWithHandler: ^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
- NSLog(@"THE VALUE IS next");
+ //NSLog(@"THE VALUE IS next");
 __weak typeof(self) weakSelf = self;
  [batteryChannel setMethodCallHandler:^(FlutterMethodCall* call, FlutterResult result) {
    // This method is invoked on the UI thread.
@@ -177,7 +177,7 @@ __weak typeof(self) weakSelf = self;
         return MPRemoteCommandHandlerStatusSuccess;
     }];
        [commandCenter.previousTrackCommand addTargetWithHandler: ^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
- NSLog(@"THE VALUE IS previousTrackCommand");
+ //NSLog(@"THE VALUE IS previousTrackCommand");
 __weak typeof(self) weakSelf = self;
  [batteryChannel setMethodCallHandler:^(FlutterMethodCall* call, FlutterResult result) {
    // This method is invoked on the UI thread.
